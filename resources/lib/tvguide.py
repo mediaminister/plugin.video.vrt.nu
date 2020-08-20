@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 import dateutil.parser
 import dateutil.tz
 
+from apihelper import ApiHelper
 from data import CHANNELS, RELATIVE_DATES
 from favorites import Favorites
 from helperobjects import TitleItem
@@ -27,6 +28,7 @@ class TVGuide:
         """Initializes TV-guide object"""
         self._favorites = Favorites()
         self._resumepoints = ResumePoints()
+        self._apihelper = ApiHelper(self._favorites, self._resumepoints)
         self._metadata = Metadata(self._favorites, self._resumepoints)
 
     def show_tvguide(self, date=None, channel=None):
@@ -226,13 +228,30 @@ class TVGuide:
             epg = self.parse(date, now)
             epg_url = epg.strftime(self.VRT_TVGUIDE)
             schedule = get_url_json(url=epg_url, fail={})
+
+            # Get all whatson id's
+            whatson_ids = []
+            for channel_id, episodes in list(schedule.items()):
+                for episode in episodes:
+                    whatson_ids.append(episode.get('vrt.whatson-id'))
+
+            # Get extra EPG data from VRT NU Search API
+            _, extra_eps = self._apihelper.get_episodes(whatson_id=whatson_ids)
+
             for channel_id, episodes in list(schedule.items()):
                 channel = find_entry(CHANNELS, 'id', channel_id)
                 epg_id = channel.get('epg_id')
                 if epg_id not in epg_data:
                     epg_data[epg_id] = []
                 for episode in episodes:
-                    if episode.get('url') and episode.get('vrt.whatson-id'):
+                    whatson_id = episode.get('vrt.whatson-id')
+                    genre = None
+                    for extra_ep in extra_eps:
+                        if whatson_id == extra_ep.get('whatsonId'):
+                            for programtag in extra_ep.get('programTags'):
+                                if programtag.get('parentTitle') == 'Categorie':
+                                    genre = programtag.get('title')
+                    if episode.get('url') and whatson_id:
                         path = url_for('play_whatson_id', whatson_id=episode.get('vrt.whatson-id'))
                     else:
                         path = None
@@ -242,6 +261,7 @@ class TVGuide:
                         image=add_https_proto(episode.get('image', '')),
                         title=episode.get('title'),
                         subtitle=html_to_kodi(episode.get('subtitle', '')),
+                        genre=genre,
                         description=html_to_kodi(episode.get('description', '')),
                         stream=path,
                     ))

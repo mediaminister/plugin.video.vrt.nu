@@ -580,7 +580,10 @@ class ApiHelper:
             params['highlight'] = 'true'
 
         if whatson_id:
-            params['facets[whatsonId]'] = whatson_id
+            if isinstance(whatson_id, list):
+                params['facets[whatsonId]'] = '[%s]' % (','.join(whatson_id))
+            else:
+                params['facets[whatsonId]'] = whatson_id
 
         if video_id:
             params['facets[videoId]'] = video_id
