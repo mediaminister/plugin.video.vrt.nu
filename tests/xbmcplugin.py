@@ -102,7 +102,7 @@ def getSetting(handle, key):
 
 def setContent(handle, content):
     """A stub implementation of the xbmcplugin setContent() function"""
-    assert content in ['albums', 'artists', 'episodes', 'files', 'movies', 'musicvideos', 'songs', 'tvshows']
+    assert content in ['albums', 'artists', 'episodes', 'files', 'movies', 'musicvideos', 'seasons', 'songs', 'tvshows', 'videos']
 
 
 def setPluginFanart(handle, image, color1=None, color2=None, color3=None):
