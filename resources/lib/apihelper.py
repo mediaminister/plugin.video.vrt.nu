@@ -253,13 +253,14 @@ class ApiHelper:
         info_labels = self._metadata.get_info_labels(episode)
         # FIXME: Due to a bug in Kodi, ListItem.Title is used when Sort methods are used, not ListItem.Label
         info_labels['title'] = label
+        path = url_for('play_id', video_id=episode.get('videoId'), publication_id=episode.get('publicationId'))
 
         return TitleItem(
             label=label,
-            path=url_for('play_id', video_id=episode.get('videoId'), publication_id=episode.get('publicationId')),
+            path=path,
             art_dict=self._metadata.get_art(episode),
             info_dict=info_labels,
-            prop_dict=self._metadata.get_properties(episode),
+            prop_dict=self._metadata.get_properties(episode, path),
             context_menu=context_menu,
             is_playable=True,
         ), sort, ascending

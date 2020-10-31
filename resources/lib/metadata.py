@@ -12,7 +12,7 @@ except ImportError:  # Python 2
     from urllib import quote_plus
 
 from data import CHANNELS, SECONDS_MARGIN
-from kodiutils import colour, get_setting_bool, localize, localize_datelong, log, url_for
+from kodiutils import colour, get_setting_bool, jsonrpc, kodi_version_major, localize, localize_datelong, log, url_for
 from utils import (add_https_proto, assetpath_to_id, capitalize, find_entry, from_unicode,
                    html_to_kodi, reformat_url, reformat_image_url, shorten_link, to_unicode, unescape,
                    url_to_episode)
@@ -174,7 +174,7 @@ class Metadata:
         """Get playcount from single item json api data"""
         playcount = -1
         # Only fill in playcount when using VRT NU resumepoints because setting playcount breaks standard Kodi watched status
-        if self._resumepoints.is_activated():
+        if self._resumepoints.is_activated() and kodi_version_major() < 19:
             asset_id = self.get_asset_id(api_data)
             if asset_id:
                 position = self._resumepoints.get_position(asset_id)
@@ -183,7 +183,7 @@ class Metadata:
                     playcount = 1
         return playcount
 
-    def get_properties(self, api_data):
+    def get_properties(self, api_data, path=None):
         """Get properties from single item json api data"""
         properties = {}
 
@@ -199,11 +199,16 @@ class Metadata:
 
                 position = self._resumepoints.get_position(asset_id)
                 total = self._resumepoints.get_total(asset_id)
-                # Master over Kodi watch status
-                if position and total and SECONDS_MARGIN < position < total - SECONDS_MARGIN:
-                    properties['resumetime'] = position
-                    properties['totaltime'] = total
-                    log(2, '[Metadata] manual resumetime set to {position}', position=position)
+
+                if kodi_version_major() >= 19 and path:
+                    # update via json rpc
+                    result = jsonrpc(method='Files.SetFileDetails', params=dict(file=path, media='video', resume=dict(position=position, total=total)))
+                else:
+                    # Master over Kodi watch status
+                    if position and total and SECONDS_MARGIN < position < total - SECONDS_MARGIN:
+                        properties['resumetime'] = position
+                        properties['totaltime'] = total
+                        log(2, '[Metadata] manual resumetime set to {position}', position=position)
 
             episode = self.get_episode(api_data)
             season = self.get_season(api_data)
