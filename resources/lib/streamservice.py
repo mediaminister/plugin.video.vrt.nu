@@ -39,7 +39,7 @@ class StreamService:
         # Try cache
         data = get_cache('vualto_license_url.json')
         if data:
-            return data
+            return data.get('la_url')
 
         vualto_license_url = get_url_json(url=self._VUPLAY_API_URL, fail={}).get('drm_providers', {}).get('widevine', {})
         if vualto_license_url:
@@ -47,7 +47,7 @@ class StreamService:
             exp = generate_expiration_date(hours=168)
             vualto_license_url.update(expirationDate=exp)
             update_cache('vualto_license_url.json', dumps(vualto_license_url))
-        return vualto_license_url
+        return vualto_license_url.get('la_url')
 
     @staticmethod
     def _create_settings_dir():
@@ -171,7 +171,7 @@ class StreamService:
         if stream_json and api_data.is_live_stream:
             from json import dumps
             exp = stream_json.get('drmExpired') or generate_expiration_date()
-            vualto_license_url = self._get_vualto_license_url().get('la_url')
+            vualto_license_url = self._get_vualto_license_url()
             stream_json.update(expirationDate=exp, vualto_license_url=vualto_license_url)
             cache_file = api_data.video_id + '.json'
             update_cache(cache_file, dumps(stream_json))
