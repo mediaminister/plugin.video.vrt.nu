@@ -67,28 +67,10 @@ jobs:
           asset_content_type: application/zip
       - name: Submit matrix version to official kodi repository
         id: kodi-submit-matrix
-        uses: xbmc/action-kodi-addon-submitter@v1.3
+        uses: mediaminister/action-kodi-addon-submitter@master
         with:
           kodi-repository: repo-plugins
           kodi-version: matrix
-          addon-id: plugin.video.vrt.nu
-        env:
-          GH_USERNAME: ${{secrets.GH_USERNAME}}
-          GH_TOKEN: ${{secrets.GH_TOKEN}}
-          EMAIL: ${{secrets.EMAIL}}
-      - name: Rewrite addon.xml for legacy krypton version
-        id: addon-rewrite-legacy
-        run: |
-          sudo apt-get install xmlstarlet
-          xmlstarlet ed -L -u '/addon/requires/import[@addon="xbmc.python"]/@version' -v "2.25.0" addon.xml
-          version=$(xmlstarlet sel -t -v 'string(/addon/@version)' addon.xml)
-          xmlstarlet ed -L -u '/addon/@version' -v "${version%'+matrix.1'}" addon.xml
-      - name: Submit legacy version to official kodi repository
-        id: kodi-submit-legacy
-        uses: xbmc/action-kodi-addon-submitter@v1.3
-        with:
-          kodi-repository: repo-plugins
-          kodi-version: krypton
           addon-id: plugin.video.vrt.nu
         env:
           GH_USERNAME: ${{secrets.GH_USERNAME}}
