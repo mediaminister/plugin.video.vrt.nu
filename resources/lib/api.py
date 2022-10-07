@@ -36,7 +36,7 @@ def get_sort(program_type):
     return sort, ascending
 
 
-def get_context_menu(program_name, program_id, program_title, program_type, plugin_path, is_favorite):
+def get_context_menu(program_name, program_id, program_title, program_type, plugin_path, is_favorite, is_continue=False, episode_id=None):
     """Get context menu for listitem"""
     context_menu = []
 
@@ -67,6 +67,12 @@ def get_context_menu(program_name, program_id, program_title, program_type, plug
                 'Container.Update(%s)' % url_for('programs', program_name=program_name)
             ))
 
+    # Delete continue
+    if is_continue:
+        context_menu.append((
+            localize(30455),  # Delete from this list
+            'RunPlugin(%s)' % url_for('resumepoints_continue_delete', episode_id=episode_id)
+        ))
     return context_menu
 
 
@@ -521,6 +527,7 @@ def convert_episodes(api_data, destination, use_favorites=False, **kwargs):
     if episode_list:
         for item in episode_list.get('paginated').get('edges'):
             episode = item.get('node').get('episode')
+            episode_id = episode.get('id')
             video_id = episode.get('watchAction').get('videoId')
             publication_id = episode.get('watchAction').get('publicationId')
             path = url_for('play_id', video_id=video_id, publication_id=publication_id)
@@ -563,8 +570,14 @@ def convert_episodes(api_data, destination, use_favorites=False, **kwargs):
             if use_favorites and is_favorite is False:
                 continue
 
+            # Check continue
+            is_continue = False
+            if destination == 'resumepoints_continue':
+                is_continue = True
+
             # Context menu
-            context_menu = get_context_menu(program_name, program_id, program_title, program_type, plugin_path, is_favorite)
+            context_menu = get_context_menu(program_name, program_id, program_title, program_type, plugin_path,
+                                            is_favorite, is_continue, episode_id)
 
             # Label
             label = format_label(program_title, episode_title, program_type, ontime, is_favorite)
