@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: stremio-vrtmax-livetv
+    runtime: node
+    rootDir: stremio-addon
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: VRT_USERNAME
+        sync: false
+      - key: VRT_PASSWORD
+        sync: false
+      - key: PORT
+        value: 10000
+    autoDeploy: true

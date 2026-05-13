@@ -1,0 +1,20 @@
+{
+  "name": "stremio-vrtmax-livetv",
+  "version": "1.0.0",
+  "description": "Stremio addon for VRT MAX live TV channels",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "stremio-addon-sdk": "^1.6.10",
+    "node-fetch": "^2.7.0",
+    "tough-cookie": "^4.1.4",
+    "fetch-cookie": "^2.1.0",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "GPL-3.0"
+}
